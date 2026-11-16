@@ -1,48 +1,93 @@
-# MSW calorific-value prediction: interpretable Sugeno fuzzy baseline and rule compression
+# MSW Calorific Value Prediction — Gaussian Sugeno Rule-Base Compression
 
-Student: Hira (surname and student ID to be added by student).
+A reproducible course project examining the accuracy–complexity trade-off of a Gaussian Takagi–Sugeno neuro-fuzzy model for predicting municipal solid waste (MSW) calorific value.
 
-## Reference
-Mondal, S. and Rafizul, I. M., *Predicting Calorific Value through Proximate Analysis of Municipal Solid Waste Using Soft Computing System*, 2024 preprint, DOI: 10.21203/rs.3.rs-5297925/v1.
+## Research question
 
-## Problem
-Predict municipal solid waste calorific value (kJ/g) from moisture, volatile matter, fixed carbon and ash percentages.
+Can reducing the fuzzy rule base from **81 rules to 16 rules** substantially reduce training time without a large deterioration in prediction accuracy?
 
-## Fuzzy system
-Four inputs, first-order Takagi–Sugeno rules, Gaussian membership functions, product rule activation, normalized firing strengths, linear consequents and weighted-sum output. A transparent approximation to the paper's ANFIS, NOT an exact MATLAB reproduction. Paper reports 81 rules; baseline uses 3 Gaussian MFs/input = 81 rules. Proposed compact variant uses 2 MFs/input = 16 rules. Both use identical ridge and optimization procedure. Gaussian widths are fixed; centers optimized with L-BFGS-B, consequents solved by ridge least squares. Not the paper's backpropagation 1000-epoch procedure.
+## Reference study and reproduction scope
+
+S. Mondal and I. M. Rafizul, *Predicting Calorific Value through Proximate Analysis of Municipal Solid Waste Using Soft Computing System* (2024 preprint), DOI: [10.21203/rs.3.rs-5297925/v1](https://doi.org/10.21203/rs.3.rs-5297925/v1).
+
+This implementation is an **architectural approximation of the fuzzy inference subsystem**, not an exact numerical reproduction of the paper's MATLAB ANFIS. The original trained parameters, exact split, and full training configuration were not available. In particular, the present code uses ridge-regularized least squares and L-BFGS-B optimization rather than the paper's reported 1000-iteration backpropagation training.
 
 ## Dataset
-`data/table2_transcribed.csv`: 37 visible rows from Table 2 of supplied paper, 28 labeled measured and 9 from other studies. Original paper also refers to 46 datasets / 230 data values, an inconsistency requiring disclosure. Manually transcribed from the PDF; user MUST check the values before citing experimental results. No fabricated rows.
 
-## Install
+`data/table2_transcribed.csv` contains **37 visible observations** transcribed from Table 2 of the reference paper: 28 identified as measured and nine sourced from other studies. The original article also discusses 46 datasets / 230 values, which is not consistent with the 37 visible table rows. This discrepancy is documented rather than resolved by inventing data.
+
+Inputs: moisture content (MC), volatile content (VC), fixed carbon (FC), and ash content (A). Target: calorific value in kJ/g. The data were checked against the visible Table 2; they should not be treated as a large or independently validated benchmark.
+
+## Method
+
+Both variants use four inputs, Gaussian membership functions, product-based rule firing, normalized firing strengths, first-order Takagi–Sugeno linear consequents, and weighted-sum output. Consequent coefficients are estimated using ridge-regularized least squares; Gaussian centers are optimized using L-BFGS-B while widths remain fixed.
+
+| Variant | Membership functions per input | Number of rules |
+|---|---:|---:|
+| Baseline | 3 | 81 |
+| Compact proposal | 2 | 16 |
+
+The compact proposal reduces the rule count by **80.25%**. Both variants use the same data split, preprocessing, and evaluation protocol for each run.
+
+## Requirements and setup
+
+Experiments were conducted on Windows with **Python 3.11.9** and an **Intel Core i7-13620H** CPU. `requirements.txt` specifies project dependencies; `environment.txt` records the Python packages installed in the experiment environment.
+
 ```bash
-python -m venv .venv
-# Windows: .venv\\Scripts\\activate
-# macOS/Linux: source .venv/bin/activate
-pip install -r requirements.txt
+python -m pip install -r requirements.txt
+python -m pytest tests -q
 ```
 
-## Run
+## Running experiments
+
+From the project root:
+
 ```bash
-python -m pytest tests -q
 python src/run_experiments.py --seed 42
 ```
-Results created after execution: `results/metrics.csv`, `results/test_predictions.csv`, `results/prediction_comparison.png`, `results/run_metadata.json`.
 
-## Reproduction / baseline
-A faithful architectural *approximation* of the paper's four-input Gaussian Sugeno neuro-fuzzy sub-system. The exact trained MATLAB model and 81 learned rules were not provided. Do not present this as a numerical reproduction of the reported R².
+The script writes outputs to `results/` by default: `metrics.csv`, `test_predictions.csv`, `prediction_comparison.png`, and `run_metadata.json`. Running it again may overwrite those root-level outputs. The archived five-seed outputs are preserved separately under `results/results_seed7/`, `results/results_seed21/`, `results/results_seed42/`, `results/results_seed73/`, and `results/results_seed99/`.
 
-## Proposed extension
-Rule-base compression: 81 rules to 16 rules, same dataset, split, optimization and regularization. Hypothesis: smaller model reduces computational cost and overfitting; accuracy is an empirical question, not an established result.
+The experiments used seeds **7, 21, 42, 73, and 99**, with an approximately 80/20 training/test split (29 training and 8 test observations per run). Each pair of models was evaluated on the same split. `all_experiment_results.csv` aggregates the individual runs.
 
-## Experiments and results
-Experiments are NOT run as part of the provided package. Run the script and insert measured results into the report/presentation. Do not copy numbers from the paper as your own results. See `experiments/EXPERIMENT_PLAN.txt`.
+## Experimental results
+
+The table shows mean ± sample standard deviation across five runs. RMSE and MAE are in kJ/g; training time is in seconds.
+
+| Metric | 81-rule baseline | 16-rule compact model |
+|---|---:|---:|
+| RMSE ↓ | 7.0611 ± 2.2294 | 6.9864 ± 2.4118 |
+| MAE ↓ | 4.9642 ± 0.9762 | 5.2382 ± 1.3779 |
+| R² ↑ | 0.1928 ± 0.1515 | 0.2213 ± 0.1500 |
+| Training time ↓ | 4.9340 ± 1.5343 | 0.0918 ± 0.0533 |
+| Rule count ↓ | 81 | 16 |
+
+The compact model trained approximately **53.7× faster** on average. It had slightly lower mean RMSE but higher mean MAE. Both variants had low R² values and performance varied across data splits. These findings **do not establish a general accuracy advantage** for the compact model.
+
+The seed-42 prediction comparison is available at `results/results_seed42/prediction_comparison.png`. One high-calorific-value test observation produced a large prediction error for both models.
+
+## Repository contents
+
+- `src/model.py` — Gaussian Sugeno model implementation
+- `src/run_experiments.py` — training, evaluation, and output generation
+- `data/table2_transcribed.csv` — transcribed source-table observations
+- `tests/` — automated tests
+- `experiments/EXPERIMENT_PLAN.txt` — experiment plan
+- `results/results_seed*/` — archived metrics, predictions, plots, and metadata
+- `all_experiment_results.csv` — consolidated results
+- `report/` — Turkish technical report
+- `presentation/` — presentation materials
+- `requirements.txt`, `environment.txt` — dependencies and environment snapshot
 
 ## Limitations
-Small data; 37 visible records; unknown original train/test indices; incomplete hyperparameter details; manually transcribed values; fixed MF widths; single holdout; reported paper performance may not generalize; variables in Table 2 are not constrained to sum to 100% (basis may differ).
 
-## Sources
-Paper above; Jang (1993), ANFIS, IEEE TSMC 23(3):665–685, DOI:10.1109/21.256541; Zadeh (1965), Fuzzy sets, Information and Control 8(3):338–353, DOI:10.1016/S0019-9958(65)90241-X.
+The dataset is very small (37 records), with only eight test records per split. Source records are heterogeneous, and the reference paper's original split and learned model parameters are unavailable. Five holdout splits provide limited evidence; no independent external validation or source-stratified evaluation was conducted. Gaussian widths were fixed, and the current training approach differs from the source article. Timing results are hardware- and environment-dependent.
+
+## Further reading
+
+- L. A. Zadeh, “Fuzzy sets,” *Information and Control*, 8(3), 338–353, 1965. DOI: 10.1016/S0019-9958(65)90241-X.
+- J.-S. R. Jang, “ANFIS: Adaptive-network-based fuzzy inference system,” *IEEE Transactions on Systems, Man, and Cybernetics*, 23(3), 665–685, 1993. DOI: 10.1109/21.256541.
 
 ## Generative AI disclosure
-ChatGPT assisted in drafting code, documentation, presentation text, and report. Student is responsible for checking, running, understanding and reporting actual experiments.
+
+OpenAI ChatGPT assisted with code, documentation, report, and presentation drafting. The experiments were executed locally, and the observed results are reported separately from the reference paper's claims. The project does not claim exact reproduction of the original ANFIS numerical results.
