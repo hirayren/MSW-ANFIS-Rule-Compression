@@ -1,6 +1,19 @@
 # MSW Calorific Value Prediction — Gaussian Sugeno Rule-Base Compression
 
+## Student information
+
+- **Student:** Hira Nur BAYTOK
+- **Student ID:** 1306200001
+- **University:** İstanbul University-Cerrahpaşa, Faculty of Engineering
+- **Department:** Computer Engineering
+- **Course:** BIMU4092 Bulanık Mantık
+- **Academic project:** Fuzzy Logic term project, November 2026
+
 A reproducible course project examining the accuracy–complexity trade-off of a Gaussian Takagi–Sugeno neuro-fuzzy model for predicting municipal solid waste (MSW) calorific value.
+
+## Problem description
+
+Municipal solid waste has variable composition and energy content. Laboratory calorimetry measures calorific value directly but requires equipment and sample preparation. This project investigates regression-based estimation from four proximate-analysis measurements: moisture content (MC), volatile content (VC), fixed carbon (FC), and ash content (A). The predicted output is calorific value in kJ/g.
 
 ## Research question
 
@@ -27,13 +40,33 @@ Both variants use four inputs, Gaussian membership functions, product-based rule
 | Baseline | 3 | 81 |
 | Compact proposal | 2 | 16 |
 
-The compact proposal reduces the rule count by **80.25%**. Both variants use the same data split, preprocessing, and evaluation protocol for each run.
+The **proposed extension** reduces the rule count by **80.25%**. Both variants use the same data split, preprocessing, and evaluation protocol for each run.
+
+## Fuzzy system architecture
+
+The implemented first-order Takagi–Sugeno system follows these computational stages:
+
+1. **Fuzzification:** calculate Gaussian membership degrees for each of the four normalized input variables.
+2. **Rule firing:** calculate each rule's activation as the product of its four membership degrees.
+3. **Normalization:** divide each activation by the sum of all rule activations.
+4. **Consequent evaluation:** calculate a first-order linear function of the four inputs for each rule.
+5. **Aggregation:** calculate the final crisp output as the weighted sum of rule consequents, then convert it to kJ/g.
+
+With three Gaussian membership functions per input, the Cartesian rule base has 3^4 = 81 rules; with two functions per input it has 2^4 = 16 rules. There are 405 and 80 linear consequent coefficients, respectively (five per rule). This is an interpretable Sugeno-style architectural approximation, not the original paper's trained MATLAB model.
+
+## Reproduction experiments
+
+The reproduction baseline retains the reference paper's four inputs, Gaussian memberships, first-order Sugeno rule structure, and reported 81-rule count. It does **not** reproduce the original learned parameter values, subtractive-clustering configuration, or 1000-iteration backpropagation training. Instead, this Python implementation uses a documented shared optimization procedure for both the baseline and compact variant. The original paper's published performance metrics must not be confused with the measurements obtained here.
+
+Both variants were evaluated on the same five seeded 80/20 splits. Each seed produces a pair of comparable RMSE, MAE, R², and training-time measurements. The test set is held out from fitting. Detailed outputs and the consolidated CSV are included in the repository.
 
 ## Requirements and setup
 
 Experiments were conducted on Windows with **Python 3.11.9** and an **Intel Core i7-13620H** CPU. `requirements.txt` specifies project dependencies; `environment.txt` records the Python packages installed in the experiment environment.
 
 ```bash
+git clone https://github.com/hirayren/MSW-ANFIS-Rule-Compression.git
+cd MSW-ANFIS-Rule-Compression
 python -m pip install -r requirements.txt
 python -m pytest tests -q
 ```
@@ -83,7 +116,7 @@ The seed-42 prediction comparison is available at `results/results_seed42/predic
 
 The dataset is very small (37 records), with only eight test records per split. Source records are heterogeneous, and the reference paper's original split and learned model parameters are unavailable. Five holdout splits provide limited evidence; no independent external validation or source-stratified evaluation was conducted. Gaussian widths were fixed, and the current training approach differs from the source article. Timing results are hardware- and environment-dependent.
 
-## Further reading
+## References and further reading
 
 - L. A. Zadeh, “Fuzzy sets,” *Information and Control*, 8(3), 338–353, 1965. DOI: 10.1016/S0019-9958(65)90241-X.
 - J.-S. R. Jang, “ANFIS: Adaptive-network-based fuzzy inference system,” *IEEE Transactions on Systems, Man, and Cybernetics*, 23(3), 665–685, 1993. DOI: 10.1109/21.256541.
