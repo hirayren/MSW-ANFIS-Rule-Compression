@@ -1,0 +1,9 @@
+EXPERIMENT PLAN (NOT YET EXECUTED)
+1. Verify all 37 rows in data/table2_transcribed.csv against the source Table 2.
+2. Run python -m pytest tests -q.
+3. Run python src/run_experiments.py --seed 42.
+4. Run seeds 7, 21, 42, 73, 99, saving each result separately before next run.
+5. Report mean/std RMSE and MAE; avoid claims of superiority on a single 8-row test set.
+6. Investigate sample origins: 28 'measured', 9 'other_study'; random split may overstate generalization.
+7. Compare rule count (81 vs 16), runtime and errors; describe trade-off.
+8. Add experiment with held-out 'other_study' rows as sensitivity check (requires new split code).

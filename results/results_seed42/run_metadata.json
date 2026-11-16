@@ -1,0 +1,12 @@
+{
+  "seed": 42,
+  "dataset": "paper Table 2 manually transcribed; verify against PDF",
+  "split": "random 80/20",
+  "input_order": [
+    "moisture",
+    "volatile",
+    "fixed_carbon",
+    "ash"
+  ],
+  "note": "Not a full reproduction of MATLAB training or published numeric results"
+}
